@@ -1,0 +1,12 @@
+bin/
+obj/
+publish/
+
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.DotSettings.user
+
+*.log
