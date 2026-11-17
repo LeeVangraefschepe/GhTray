@@ -85,7 +85,7 @@ internal sealed class ItemListView : Grid
         _rows.Background = Palette.Window;
         _rows.BorderThickness = new Thickness(0);
         _rows.SelectionMode = SelectionMode.Single;
-        _rows.ItemTemplate = new FuncDataTemplate<ItemRow>((row, _) => new ItemRowView(_layout, row, _isPullRequestList));
+        _rows.ItemTemplate = new FuncDataTemplate<ItemRow>((row, _) => row is null ? null : new ItemRowView(_layout, row, _isPullRequestList));
         _rows.Styles.Add(CreateCompactRowStyle());
         foreach (var resource in RowBackgroundResources) _rows.Resources[resource] = Brushes.Transparent;
 

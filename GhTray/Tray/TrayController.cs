@@ -59,7 +59,7 @@ public sealed class TrayController : IDisposable
     {
         _trayIcon.ToolTipText = "GitHub assigned - loading...";
         _trayIcon.Menu = BuildContextMenu();
-        _trayIcon.Clicked += (_, _) => ToggleItemsWindow();
+        _trayIcon.Clicked += (_, _) => Dispatcher.UIThread.Post(ToggleItemsWindow);
         UpdateIcon();
 
         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _trayIcon });
@@ -107,7 +107,7 @@ public sealed class TrayController : IDisposable
     private static NativeMenuItem CreateMenuItem(string header, Action onClick)
     {
         var item = new NativeMenuItem(header);
-        item.Click += (_, _) => onClick();
+        item.Click += (_, _) => Dispatcher.UIThread.Post(onClick);
         return item;
     }
 
@@ -118,11 +118,11 @@ public sealed class TrayController : IDisposable
             ToggleType = NativeMenuItemToggleType.CheckBox,
             IsChecked = _autostart.IsEnabled(),
         };
-        item.Click += (_, _) =>
+        item.Click += (_, _) => Dispatcher.UIThread.Post(() =>
         {
             _autostart.SetEnabled(!_autostart.IsEnabled());
             item.IsChecked = _autostart.IsEnabled();
-        };
+        });
         return item;
     }
 
