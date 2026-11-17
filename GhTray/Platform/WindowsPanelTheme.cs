@@ -1,13 +1,15 @@
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 
-namespace GhTray.Icons;
+namespace GhTray.Platform;
 
-internal static class TaskbarTheme
+[SupportedOSPlatform("windows")]
+internal sealed class WindowsPanelTheme : IPanelTheme
 {
     private const string PersonalizeKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string LightThemeValue = "SystemUsesLightTheme";
 
-    public static bool IsDark()
+    public bool IsDark()
     {
         try
         {

@@ -1,19 +1,23 @@
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 
-namespace GhTray.Tray;
+namespace GhTray.Platform;
 
-internal static class AutostartRegistration
+[SupportedOSPlatform("windows")]
+internal sealed class WindowsAutostartRegistration : IAutostartRegistration
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "GhTray";
 
-    public static bool IsEnabled()
+    public bool IsSupported => true;
+
+    public bool IsEnabled()
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
         return key?.GetValue(ValueName) is not null;
     }
 
-    public static void SetEnabled(bool enabled)
+    public void SetEnabled(bool enabled)
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
         if (key is null) return;

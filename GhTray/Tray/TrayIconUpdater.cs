@@ -1,25 +1,31 @@
+using Avalonia.Controls;
 using GhTray.Icons;
+using GhTray.Platform;
 
 namespace GhTray.Tray;
 
-internal sealed class TrayIconUpdater(NotifyIcon trayIcon, Form windowToSync) : IDisposable
+internal sealed class TrayIconUpdater(TrayIcon trayIcon, Window windowToSync, IPanelTheme panelTheme)
 {
-    private (Badge Badge, bool IsDarkTaskbar, int Size)? _lastRenderedState;
-    private Icon? _currentIcon;
+    private const int WindowsBaseIconSize = 16;
+    private const int DefaultBaseIconSize = 32;
+
+    private (Badge Badge, bool IsDarkPanel, int Size)? _lastRenderedState;
 
     public void Show(Badge badge)
     {
-        var state = (Badge: badge, IsDarkTaskbar: TaskbarTheme.IsDark(), Size: SystemInformation.SmallIconSize.Width);
+        var state = (Badge: badge, IsDarkPanel: panelTheme.IsDark(), Size: ChooseIconSize());
         if (_lastRenderedState == state) return;
         _lastRenderedState = state;
 
-        var icon = IconFactory.Create(state.Badge, state.Size, state.IsDarkTaskbar);
+        var icon = IconFactory.Create(state.Badge, state.Size, state.IsDarkPanel);
         trayIcon.Icon = icon;
         windowToSync.Icon = icon;
-
-        _currentIcon?.Dispose();
-        _currentIcon = icon;
     }
 
-    public void Dispose() => _currentIcon?.Dispose();
+    private int ChooseIconSize()
+    {
+        var scaling = windowToSync.Screens.Primary?.Scaling ?? 1.0;
+        var baseSize = OperatingSystem.IsWindows() ? WindowsBaseIconSize : DefaultBaseIconSize;
+        return (int)Math.Round(baseSize * scaling);
+    }
 }
