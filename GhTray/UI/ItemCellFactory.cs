@@ -18,6 +18,7 @@ internal static class ItemCellFactory
         ListColumn.Number => Label("#" + item.Number, Palette.Muted, HorizontalAlignment.Right),
         ListColumn.Title => CreateTitle(item, isPullRequestList),
         ListColumn.Checks => CreateCheckCounts(item.Checks),
+        ListColumn.BaseBranch => Label(item.BaseBranch ?? "-", Palette.Muted),
         ListColumn.Author => Label(item.Author, Palette.Muted),
         ListColumn.LastActivity => CreateLastActivity(item),
         _ => throw new ArgumentOutOfRangeException(nameof(column)),

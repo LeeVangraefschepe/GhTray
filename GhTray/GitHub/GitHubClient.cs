@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using GhTray.Models;
 
 namespace GhTray.GitHub;
@@ -8,6 +9,8 @@ public sealed class GitHubClient
     private const string IssueFields = "number,title,url,updatedAt,repository,author";
     private const int SearchLimit = 100;
     private const int MaxParallelCheckLookups = 6;
+
+    private readonly ConcurrentDictionary<string, string> _baseBranches = new();
 
     private string? _authenticatedLogin;
 
@@ -75,7 +78,7 @@ public sealed class GitHubClient
         return byUrl.Values.ToList();
     }
 
-    private static async Task<WorkItem[]> AttachChecksAsync(IEnumerable<WorkItem> pullRequests, CancellationToken cancellationToken)
+    private async Task<WorkItem[]> AttachChecksAsync(IEnumerable<WorkItem> pullRequests, CancellationToken cancellationToken)
     {
         using var throttle = new SemaphoreSlim(MaxParallelCheckLookups);
 
@@ -84,13 +87,37 @@ public sealed class GitHubClient
             await throttle.WaitAsync(cancellationToken);
             try
             {
-                return pullRequest with { Checks = await GetChecksAsync(pullRequest.Url, cancellationToken) };
+                var checks = GetChecksAsync(pullRequest.Url, cancellationToken);
+                var baseBranch = GetBaseBranchAsync(pullRequest.Url, cancellationToken);
+                return pullRequest with { Checks = await checks, BaseBranch = await baseBranch };
             }
             finally
             {
                 throttle.Release();
             }
         }));
+    }
+
+    private async Task<string?> GetBaseBranchAsync(string pullRequestUrl, CancellationToken cancellationToken)
+    {
+        if (_baseBranches.TryGetValue(pullRequestUrl, out var cached)) return cached;
+
+        try
+        {
+            var name = (await GhCli.RunAsync(["pr", "view", pullRequestUrl, "--json", "baseRefName", "--jq", ".baseRefName"], cancellationToken)).Trim();
+            if (name.Length == 0) return null;
+
+            _baseBranches[pullRequestUrl] = name;
+            return name;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static async Task<CheckSummary?> GetChecksAsync(string pullRequestUrl, CancellationToken cancellationToken)

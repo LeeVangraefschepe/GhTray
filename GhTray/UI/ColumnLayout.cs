@@ -8,6 +8,7 @@ internal enum ListColumn
     Number,
     Title,
     Checks,
+    BaseBranch,
     Author,
     LastActivity,
 }
@@ -28,7 +29,11 @@ internal sealed class ColumnLayout
             new(ListColumn.Title, "Title", FlexibleWidth),
         ];
 
-        if (isPullRequestList) columns.Add(new ColumnSpec(ListColumn.Checks, "Checks", 150));
+        if (isPullRequestList)
+        {
+            columns.Add(new ColumnSpec(ListColumn.Checks, "Checks", 150));
+            columns.Add(new ColumnSpec(ListColumn.BaseBranch, "Base", 140));
+        }
 
         columns.Add(new ColumnSpec(ListColumn.Author, "Author", 120));
         columns.Add(new ColumnSpec(ListColumn.LastActivity, "Last activity", 110));

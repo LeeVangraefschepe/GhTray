@@ -29,7 +29,9 @@ internal sealed class ItemListView : Grid
     private readonly ColumnLayout _layout;
     private readonly ListBox _rows = new();
     private readonly TextBlock _emptyMessage = new();
+    private readonly ColumnHeaderView _header;
     private IReadOnlyList<WorkItem> _items = [];
+    private SortState _sort = SortState.Default;
 
     public ItemListView(bool isPullRequestList)
     {
@@ -43,7 +45,10 @@ internal sealed class ItemListView : Grid
         ConfigureEmptyMessage();
         ConfigureContextMenu();
 
-        var header = new ColumnHeaderView(_layout);
+        _header = new ColumnHeaderView(_layout);
+        _header.SortRequested += OnSortRequested;
+        _header.ShowSort(_sort.Column, _sort.Descending);
+        var header = _header;
         SetRow(_rows, 1);
         SetRow(_emptyMessage, 1);
         Children.Add(header);
@@ -68,7 +73,7 @@ internal sealed class ItemListView : Grid
         var scroll = FindScrollViewer();
         var scrollOffset = scroll?.Offset;
 
-        var rows = items.Select((item, index) => new ItemRow(item, index)).ToList();
+        var rows = ColumnSorter.Sort(items, _sort).Select((item, index) => new ItemRow(item, index)).ToList();
         _rows.ItemsSource = rows;
         _rows.SelectedItem = rows.FirstOrDefault(row => row.Item.Key == selectedKey);
 
@@ -79,6 +84,13 @@ internal sealed class ItemListView : Grid
     }
 
     public void RebuildRows() => SetItems(_items);
+
+    private void OnSortRequested(ListColumn column)
+    {
+        _sort = ColumnSorter.Toggle(_sort, column);
+        _header.ShowSort(_sort.Column, _sort.Descending);
+        SetItems(_items);
+    }
 
     private void ConfigureRows()
     {

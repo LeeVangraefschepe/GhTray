@@ -11,7 +11,8 @@ public sealed record WorkItem(
     DateTimeOffset UpdatedAt,
     bool IsAssigned = true,
     bool IsReviewRequested = false,
-    CheckSummary? Checks = null)
+    CheckSummary? Checks = null,
+    string? BaseBranch = null)
 {
     public string Key => Url;
 
